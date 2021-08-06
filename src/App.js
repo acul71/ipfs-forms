@@ -14,14 +14,15 @@ import TextInput from './components/TextInput'
 function App() {
   let submitErrorMsg = React.createRef()
 
+  
+
   function handleSubmit() {
     console.log('questRes=', questRes)
     
     for (let i = 0; i < questRef.length; i++) {
-      questRef[i].current.testTextInput()  
+      questRef[i].current.testInput()  
     }
-    //questRef[1].current.testTextInput()
-    //questRef[0].current.testTextInput()
+    
 
     if (questRes.map(i => i.res).every(Boolean) === true) {
       // Handle submit
@@ -70,28 +71,8 @@ function App() {
     //questRes[idx].res = state
   }
   
-
-  /*
-  return (
-    <Container fluid="sm">
-      <Form onSubmit={(e) => e.preventDefault()}>
-        <FormTitle title="Form Title" />
-        <TextInput label="What is your name?" placeHolder="Insert text here" isRequired={true} idx={0} setQuestRes={setQuestRes}/>
-
-        <TextInput label="What is your surname?" placeHolder="Insert text here" isRequired={true} idx={1} setQuestRes={setQuestRes}/>
-
-        <Col sm={3}>
-          <Button variant="primary" type="submit" onClick={handleSubmit}>Submit</Button>
-        </Col>
-        <Col sm={4}><p className="text-danger" ref={submitErrorMsg}></p></Col>
-
-      </Form>
-    </Container>
-  )
-  */
+  // questComp is the question component parsed from form json
   let questComp
-
-  
   const questRef = new Array(numOfQuest)
   
   /* eslint-disable */
@@ -100,15 +81,7 @@ function App() {
   }
   /* eslint-enable */
   
-  //questRef.forEach(val => {
-  //  val = useRef()
-  //});
-  //questRef[0] = useRef()
-  //questRef[1] = useRef()
-  /*
-  <TextInput label="Test useImperativeHandle 0 ?" placeHolder="Insert text here" isRequired={true} idx={2} setQuestRes={setQuestRes} ref={questRef[0]}/>
-  <TextInput label="Test useImperativeHandle 1 ?" placeHolder="Insert text here" isRequired={true} idx={3} setQuestRes={setQuestRes} ref={questRef[1]}/>
-  */
+  
 
 
   return (
@@ -126,7 +99,6 @@ function App() {
               default:
                 break;
             }
-            console.log("questComp=", questComp)
             
             return questComp
           })
@@ -141,17 +113,7 @@ function App() {
       </Form>
     </Container>
   )
-  /*
-  return (
-    <div className="App">
-      <header className="App-header">       
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-      </header>
-    </div>
-  );
-   */
+  
 }
 
 export default App;

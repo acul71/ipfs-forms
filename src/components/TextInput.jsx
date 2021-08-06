@@ -3,17 +3,20 @@ import PropTypes from 'prop-types'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 
-//function TextInput(props) {
+// Using forwardRef and useImperativeHandle to make testInput() accessible from outside the component
+// I'm checking the input from inside the component but 
+// when you submit the form I need to check if test condition are valid
+// in case the user click on submit without filling the form fields
 const TextInput = React.forwardRef( (props, ref) => {
   let text = React.createRef()
   let textError = React.createRef()
 
   useImperativeHandle(ref, () => ({
-    testTextInput: () => testTextInput()  
+    testInput: () => testInput()  
   }))
 
   
-  function testTextInput() {
+  function testInput() {
     const textVal = text.current.value
     console.log(textVal)
     props.setQuestRes(props.idx, textVal, true)
@@ -31,7 +34,7 @@ const TextInput = React.forwardRef( (props, ref) => {
 
   function handleChangeTextInput(e) {
     e.preventDefault()
-    testTextInput()
+    testInput()
   }
 
   return (
