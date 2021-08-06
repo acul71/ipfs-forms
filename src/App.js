@@ -75,6 +75,7 @@ function App() {
   let questComp
   const questRef = new Array(numOfQuest)
   
+  // Disabling eslint hook check: It should be safe in this case (binding questRef array istances to useRef)
   /* eslint-disable */
   for(var i = 0; i < questRef.length; i++){
     questRef[i] = useRef()
