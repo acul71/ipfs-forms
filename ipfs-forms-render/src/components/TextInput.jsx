@@ -15,21 +15,36 @@ const TextInput = React.forwardRef( (props, ref) => {
     testInput: () => testInput()  
   }))
 
-  
+  const myQuestRes = [...props.questRes]
+
   function testInput() {
     const textVal = text.current.value
     //console.log(textVal)
-    props.setQuestRes(props.idx, textVal, true)
+
+    //props.setQuestRes(props.idx, textVal, true)
+    console.log('testInput: props.questRes', props.questRes)
+    //let myQuestRes = [...props.questRes]
+    myQuestRes[props.idx] = {val: textVal, res: true}
+    //props.setQuestRes(myQuestRes)
+    //console.log('testInput: ', props.idx, myQuestRes[props.idx])
     if(props.isRequired) {
       if(textVal.trim().length === 0) {
         textError.current.textContent = 'This field is required'
         text.current.className = text.current.className.replace('is-valid', 'is-invalid')
-        props.setQuestRes(props.idx, textVal, false)
+        //props.setQuestRes(props.idx, textVal, false)
+        //myQuestRes = [...props.questRes]
+        myQuestRes[props.idx] = {val: textVal, res: false}
+        //props.setQuestRes(myQuestRes)
+        //console.log('testInput: inside isRequired', props.idx, myQuestRes[props.idx])
+        //console.log('testInput: inside isRequired props.questRes=', props.questRes)
       } else {
         textError.current.textContent = ''
         text.current.className = text.current.className.replace('is-invalid', 'is-valid')
       }
     }
+    props.setQuestRes(myQuestRes)
+    console.log('testInput: myQuestRes=', myQuestRes)
+    console.log('testInput: props.questRes=', props.questRes)
   }
 
   function handleChangeTextInput(e) {
