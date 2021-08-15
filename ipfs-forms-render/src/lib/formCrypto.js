@@ -14,8 +14,8 @@ const crypto =
 
 const uint8arrays = require('uint8arrays')
 
-async function mytest() {
-  const publicKeyBase64 = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwWqzJ8BjEtNTBe8JnQGlcFH9ESG4+iNzSnbJoJFzN8zuF3IQTdQjSn3krclMqv1XzG2Uwe6Wd9OioVEtv4uiDvHlD7BtWI/Nl9j2ZX3jKEcl1foQ6H5iXdBSdRLu0t0csA2OkJ9lAF0hTS7dHY5jqRDZlgO7aUuIpMshQ8cLTCNXt4aqZd8aGZroUFxqSa90tWsc+3LoVtkUw1pjaZFzKO/k7HkNIe2yIcgr3qvJzppXZHHlOuCh6wGEBPE/Rl7cfRDEhf8Prb1lPP2YijijlXzUWP/f7y51UqqY+d6NU9T6t8uNHONhZQz0SFDOb1127eVvCXiMAHcUcfkPEH07NQIDAQAB'
+async function formEncrypt(publicKeyBase64='', formData=[]) {
+  //const publicKeyBase64 = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwWqzJ8BjEtNTBe8JnQGlcFH9ESG4+iNzSnbJoJFzN8zuF3IQTdQjSn3krclMqv1XzG2Uwe6Wd9OioVEtv4uiDvHlD7BtWI/Nl9j2ZX3jKEcl1foQ6H5iXdBSdRLu0t0csA2OkJ9lAF0hTS7dHY5jqRDZlgO7aUuIpMshQ8cLTCNXt4aqZd8aGZroUFxqSa90tWsc+3LoVtkUw1pjaZFzKO/k7HkNIe2yIcgr3qvJzppXZHHlOuCh6wGEBPE/Rl7cfRDEhf8Prb1lPP2YijijlXzUWP/f7y51UqqY+d6NU9T6t8uNHONhZQz0SFDOb1127eVvCXiMAHcUcfkPEH07NQIDAQAB'
 
   const sessionKey = await crypto.subtle.generateKey(
     {
@@ -50,6 +50,84 @@ async function mytest() {
     sessionKeyRaw
   )
   console.log('encryptedSessionKey=', encryptedSessionKey)
+  
+  // encrypt form data
+  let enc = new TextEncoder()
+  const encoded = enc.encode(JSON.stringify(formData))
+  // iv will be needed for decryption
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  console.log('iv=', iv)
+  console.log('sessionKey=', sessionKey)
+  const ciphertext =  await crypto.subtle.encrypt(
+    {
+      name: "AES-GCM",
+      iv: iv
+    },
+    sessionKey,
+    encoded
+  )
+  console.log('ciphertext=', ciphertext)
+
+  //let buffer = new Uint8Array(ciphertext, 0, 5)
+  const encryptedFormData = new Uint8Array(ciphertext, 0, 5)
+
+  //
+  // Test decrypt
+  //
+  const formRes = {
+    //formId: formId,
+    algorithm: {
+      name: "AES-GCM",
+      iv:  uint8arrays.toString(iv, "base64pad")
+    },
+    encryptedSessionKey: uint8arrays.toString(new Uint8Array(encryptedSessionKey), "base64pad"),
+    //encryptedSessionKey: sessionKey,
+    formData: uint8arrays.toString(new Uint8Array(ciphertext), "base64pad"),
+    //formData: ciphertext
+  }
+
+  console.log('formRes=', formRes)
+  const formResString = JSON.stringify(formRes)
+  console.log('formResString', formResString)
+  
+  // Decrypt with json string
+  const formResJson = JSON.parse(formResString)
+  //formResJson.algorithm.iv = uint8arrays.fromString(formResJson.algorithm.iv, "base64pad").buffer
+  formResJson.algorithm.iv = uint8arrays.fromString(formResJson.algorithm.iv, "base64pad")
+  formResJson.formData = uint8arrays.fromString(formResJson.formData, "base64pad").buffer
+
+  console.log('formResJson', formResJson)
+  /*
+  const jsonDecrypted = await crypto.subtle.decrypt(
+    formResJson.algorithm,
+    formResJson.composerEncryptedKey,
+    formResJson.formData
+  )
+  const jsonDec = new TextDecoder()
+  const jsonDecryptedFormData = jsonDec.decode(jsonDecrypted)
+  console.log('jsonDecryptedFormData=', jsonDecryptedFormData)  
+  */
+  
+  // Decrypt example
+  const decrypted = await crypto.subtle.decrypt(
+    {
+      name: "AES-GCM",
+      //iv: iv
+      iv: formResJson.algorithm.iv
+    },
+    sessionKey,
+    //ciphertext
+    formResJson.formData
+  )
+
+  const dec = new TextDecoder()
+  const decryptedFormData = dec.decode(decrypted)
+
+  console.log('decryptedFormData=', decryptedFormData)
+
+  //return [encryptedSessionKey, encryptedFormData]
+  return formRes
+  
 }
 
 
@@ -81,33 +159,7 @@ const publicKeyString = '-----BEGIN RSA PUBLIC KEY-----\n'+
   +'C3PL5s275bwtjr502f9wDnsqQnt96g+yhQIDAQAB\n'
   +'-----END RSA PUBLIC KEY-----'
 
-  const privateKeyString = '-----BEGIN RSA PRIVATE KEY-----\n'
-  +'MIIEowIBAAKCAQEA2AKBr2GwI8nftrVZ+jcql/1UOObIDO4AjNG1Xn6VwDQ41VOX\n'
-  +'19BSb6l2Ux83ePJwrZDCuFMYVoU2uw4lb74oSXbXfeHL8BDWLb9w4QefsiuQrpzt\n'
-  +'U/Pi/8TTgfR4KaDy750mgxeDd3F0N/2h+UmrexDZc0XVoQgWD+eljyRrbcCFyXOD\n'
-  +'vFWsdGjwwDqq3I6BnSklMYCYxgaLyg6IPF38L//MWqoYlVmjsb0o2Y+gm06FunXp\n'
-  +'qroW3MBBYwLVLmwGbHWsn0w0RSbKsj5NuOniwGf8QoDY07eq4RUP19Y4dAxEjcEW\n'
-  +'WSU7C3PL5s275bwtjr502f9wDnsqQnt96g+yhQIDAQABAoIBAAXwe7Rg0UEKqfYS\n'
-  +'Ink4zxkCxDAUWGfSm31DvuLsRB3W0cE73S738WxUkoZSk2nl8Kc1FcWPs1mdrBWU\n'
-  +'m/7okZ8Df4Vckgj1zY3Qd8AYP5HclMvYUMZALHuv48js+ejbHhLslUSBfwHnwrRP\n'
-  +'awa5uddWbUQ4JVmaKVEio3C+JZ4M4imCyfuiXFzEOwS6sjBXiunA8QQkm2GRzyO5\n'
-  +'Z+nSnwxhZ51c5sOb7OpHEGhSqGfzGu9ijnu7jUxkxyycyi6CJJEaoY466gVUTyYx\n'
-  +'0CEM7tgJfh+P19RCQY6AvoMxTiyCShGK8wbtRX/UQEAg/BKMMm4ch6+CyDMskMmz\n'
-  +'UrhhZnkCgYEA/OrkxYPghmqPeia6m6tDVb2BfhfxifnuCp8a+Nesu+ILHB+WSFRc\n'
-  +'DfaG1jNgGwtjQwgWEyxs85IBp+xq/Xckvpi8hbN9fHzrhkGIJ57sfSFKDTOrhGCk\n'
-  +'kjajzbfl2bLsKNLDd0/HjaoAUQpCXbwsRwLT+kTVbJN5PI/uBgu70/8CgYEA2qR1\n'
-  +'z8bB3SQwb+2klN6me4eYfArWcRSp4LOKMyk7yEKGuzPmnnV02DBGtHn+jEuDbYfT\n'
-  +'x/Yy2f6WUIdcoYwLdfaAO4pI24w7xILCUgTQPEj6ZRsOPf0mKMDYiXM27I+fCCY/\n'
-  +'LIzgCCVAU1BLIEnqHVbufEgZSoTX4gKpQMojKXsCgYAqkv/fn8tz1QxB67MN8U5s\n'
-  +'aHIb37vxFflUIGRR7zxMhEiKe2a41jqIvy8Db7KF2uzio8HTiG7usW1F7y4zbJLq\n'
-  +'4psZhpVhF0YuW2moAcCdb7Ufc8szhXEui7QXNRWkB9JpLNFqjCtzVWKoQanaTYrG\n'
-  +'iVtVjbC/jjOiVjgjHGaJ0QKBgD4IXyyeNa6qb9uxzvo12YI+zHKVGJZoyHHqPpGZ\n'
-  +'Z07AIT3H0eyvYoFb4ROfcSsY2acf3GRlY7QZ2Ufrv8pN04qab3N1Hoq71NFCUCO5\n'
-  +'HeOcyP4amQXZZxQ08rq8p56iePp074OSTJXDC+cXZtk4X2YHng5A3nwYCLAlFSQ+\n'
-  +'tY81AoGBAIn/aORvd6nI+crNpjhoCbHIXAA8qtljxFqh4HZ8VTkd0S+OkKGYKhX7\n'
-  +'5/ztDkREjWqOHQNuqtG1k48gfh0EQvPGaUs4LBbeY0oCWdtoTjxU9cO3J1LlPbnb\n'
-  +'K+gMJoREoM28PRYa7xUId2bmfr1ji6iGcc3XbpCR6/6UBA3enFip\n'
-  +'-----END RSA PRIVATE KEY-----'
+  const privateKeyString = ''
 
 
   let publicKey = {
@@ -198,4 +250,4 @@ const passwordGenerator = (maxLength=18, minLength=12, uppercaseMinCount=3, lowe
 //export default passwordGenerator
 exports.passwordGenerator = passwordGenerator
 exports.aes256 = aes256
-exports.mytest = mytest
+exports.formEncrypt = formEncrypt
