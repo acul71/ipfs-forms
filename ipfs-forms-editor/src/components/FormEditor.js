@@ -14,12 +14,16 @@ function  FormEditor(props) {
     console.log('create form button clicked!')
     formUrlText.current.textContent = 'Working.....'
     
-    const content = formTextarea.current.value
-    console.log('content=', content)
+    let contentText = formTextarea.current.value
+    const contentJson = JSON.parse(contentText)
     const username = state.username
     console.log('username=', username)
+    // Add username to form
+    contentJson.composerUsername = username
+
+
     const formFileName = 'FORM_' + Date.now().toString() + '.json'
-    const addRes = await fs.add( wn.path.file("public", "Form", formFileName), content)
+    const addRes = await fs.add( wn.path.file("public", "Form", formFileName), JSON.stringify(contentJson) )
     console.log('addRes=', addRes)
     const publishCID = await fs.publish()
     console.log('publish=', publishCID)
@@ -35,6 +39,7 @@ function  FormEditor(props) {
     title: "Form Title",
     submitText: "Submit",
     formSubmittionMessage: 'Thanks, form submitted!',
+    composerUsername: '',
     quest: [
       {
         type: "text",
